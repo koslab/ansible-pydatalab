@@ -4,18 +4,23 @@
       # Initialization
       - name: install Java
         yum: name=java-1.8.0-openjdk
+
       - name: install EPEL
         yum: name=epel-release
+
       - name: install supervisord
         yum: name=supervisor
+
       - name: install bzip2
         yum: name=bzip2
 
       # Install spark      
       - name: download spark
         get_url: url=https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz dest=/root/spark-1.3.1-bin-hadoop2.6.tgz validate_certs=no force=no
+
       - name: extract spark
         unarchive: src=/root/spark-1.3.1-bin-hadoop2.6.tgz dest=/opt/ copy=no
+
       - name: move spark location
         command: mv /opt/spark-1.3.1-bin-hadoop2.6 /opt/spark-1.3.1
         args:
@@ -24,54 +29,81 @@
       # Install anaconda
       - name: download anaconda installer
         get_url: url=https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh dest=/root/Anaconda-2.3.0-Linux-x86_64.sh
+
       - name: install anaconda
         command: bash /root/Anaconda-2.3.0-Linux-x86_64.sh -f -p /opt/anaconda -b
         args:
             creates: /opt/anaconda/bin/python
+
       - name: register anaconda in path
         copy: src=config/anaconda-path.sh dest=/etc/profile.d/999anaconda.sh owner=root group=root
+
       - name: install python hdfs access library
         command: /opt/anaconda/bin/pip install hdfs
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/hdfs/
+
       - name: install python hive access library
         command: /opt/anaconda/bin/pip install pyhive
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/pyhive/
+
       - name: install ipython parallel
         command: /opt/anaconda/bin/pip install ipyparallel
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/ipyparallel/
+
+      - name: install python-nvd3
+        command: /opt/anaconda/bin/pip install python-nvd3
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/nvd3/
+
 
       # Install Jupyter, Bokeh, PySpark
       - name: install jupyter
         command: /opt/anaconda/bin/conda install jupyter -y
         args:
             creates: /opt/anaconda/bin/jupyter
+
       - name: install bokeh
         command: /opt/anaconda/bin/conda install bokeh -y
         args:
             creates: /opt/anaconda/bin/bokeh-server
+
       - name: create jupyter user
         user: name=jupyter shell=/bin/bash 
+
       - name: create jupyter config dir
-        file: path=/home/jupyter/.jupyter state=directory owner=jupyter group=jupyter recurse=yes
-      - name: create jupyter config dir
+        file: path=/home/jupyter/.jupyter/custom state=directory owner=jupyter group=jupyter recurse=yes
+
+      - name: create jupyter notebook dir
         file: path=/home/jupyter/notebooks state=directory owner=jupyter group=jupyter recurse=yes
+
+      - name: create jupyter runtime dir
+        file: path=/home/jupyter/runtime/ state=directory owner=jupyter group=jupyter recurse=yes
+
       - name: copy sample notebooks
         copy: src=notebooks/ dest=/home/jupyter/notebooks/ owner=jupyter group=jupyter
+
       - name: copy jupyter config
         copy: src=config/jupyter_notebook_config.py dest=/home/jupyter/.jupyter/jupyter_notebook_config.py owner=jupyter group=jupyter
-      - name: create ipython config dir
-        file: path=/home/jupyter/.ipython/kernels/pyspark state=directory owner=jupyter group=jupyter recurse=yes
-      - name: create ipython kernel
-        copy: src=config/kernel.json dest=/home/jupyter/.ipython/kernels/pyspark/kernel.json owner=jupyter group=jupyter
+
+      - name: copy javascript library loader
+        copy: src=config/custom.js dest=/home/jupyter/.jupyter/custom/custom.js owner=jupyter group=jupyter
+
+      - name: create jupyter shared config dir
+        file: path=/home/jupyter/.local/share/jupyter/kernels/pyspark/ state=directory owner=jupyter group=jupyter recurse=yes
+
+      - name: create jupyter kernel
+        copy: src=config/kernel.json dest=/home/jupyter/.local/share/jupyter/kernels/pyspark/kernel.json owner=jupyter group=jupyter
 
       # start services on boot
       - name: create jupyter supervisor
         copy: src=config/supervisord.ini dest=/etc/supervisord.d/jupyter.ini owner=root group=root
+
       - name: start supervisord on boot
         service: name=supervisord state=started enabled=yes
+
       - name: open firewall
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
 
