@@ -89,7 +89,7 @@
         copy: src=notebooks/ dest=/home/runtime/notebooks/ owner=runtime group=runtime
 
       - name: copy jupyter config
-        copy: src=config/runtime_notebook_config.py dest=/home/runtime/.jupyter/jupyter_notebook_config.py owner=runtime group=runtime
+        copy: src=config/jupyter_notebook_config.py dest=/home/runtime/.jupyter/jupyter_notebook_config.py owner=runtime group=runtime
 
       - name: copy javascript library loader
         copy: src=config/custom.js dest=/home/runtime/.jupyter/custom/custom.js owner=runtime group=runtime
