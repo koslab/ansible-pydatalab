@@ -70,32 +70,35 @@
         args:
             creates: /opt/anaconda/bin/bokeh-server
 
-      - name: create jupyter user
-        user: name=jupyter shell=/bin/bash 
+      - name: create runtime user
+        runtime: name=runtime shell=/bin/bash 
 
       - name: create jupyter config dir
-        file: path=/home/jupyter/.jupyter/custom state=directory owner=jupyter group=jupyter recurse=yes
+        file: path=/home/runtime/.jupyter/custom state=directory owner=runtime group=runtime recurse=yes
 
       - name: create jupyter notebook dir
-        file: path=/home/jupyter/notebooks state=directory owner=jupyter group=jupyter recurse=yes
+        file: path=/home/runtime/notebooks state=directory owner=runtime group=runtime recurse=yes
 
       - name: create jupyter runtime dir
-        file: path=/home/jupyter/runtime/ state=directory owner=jupyter group=jupyter recurse=yes
+        file: path=/home/runtime/run/ state=directory owner=runtime group=runtime recurse=yes
+
+      - name: create dropzone for additional python modules
+        file: path=/home/runtime/python_modules/ state=directory owner=runtime group=runtime recurse=yes
 
       - name: copy sample notebooks
-        copy: src=notebooks/ dest=/home/jupyter/notebooks/ owner=jupyter group=jupyter
+        copy: src=notebooks/ dest=/home/runtime/notebooks/ owner=runtime group=runtime
 
       - name: copy jupyter config
-        copy: src=config/jupyter_notebook_config.py dest=/home/jupyter/.jupyter/jupyter_notebook_config.py owner=jupyter group=jupyter
+        copy: src=config/runtime_notebook_config.py dest=/home/runtime/.jupyter/jupyter_notebook_config.py owner=runtime group=runtime
 
       - name: copy javascript library loader
-        copy: src=config/custom.js dest=/home/jupyter/.jupyter/custom/custom.js owner=jupyter group=jupyter
+        copy: src=config/custom.js dest=/home/runtime/.jupyter/custom/custom.js owner=runtime group=runtime
 
       - name: create jupyter shared config dir
-        file: path=/home/jupyter/.local/share/jupyter/kernels/pyspark/ state=directory owner=jupyter group=jupyter recurse=yes
+        file: path=/home/runtime/.local/share/jupyter/kernels/pyspark/ state=directory owner=runtime group=runtime recurse=yes
 
       - name: create jupyter kernel
-        copy: src=config/kernel.json dest=/home/jupyter/.local/share/jupyter/kernels/pyspark/kernel.json owner=jupyter group=jupyter
+        copy: src=config/kernel.json dest=/home/runtime/.local/share/jupyter/kernels/pyspark/kernel.json owner=runtime group=runtime
 
       # start services on boot
       - name: create jupyter supervisor

@@ -10,7 +10,7 @@
  ],
  "env": {
   "SPARK_HOME": "/opt/spark-1.3.1/",
-  "PYTHONPATH": "/opt/spark-1.3.1/python/:/opt/spark-1.3.1/python/lib/py4j-0.8.2.1-src.zip",
+  "PYTHONPATH": "/opt/runtime/python_modules/:/opt/spark-1.3.1/python/:/opt/spark-1.3.1/python/lib/py4j-0.8.2.1-src.zip",
   "PYTHONSTARTUP": "/opt/spark-1.3.1/python/pyspark/shell.py",
   "PYSPARK_SUBMIT_ARGS": "--master 'local[*]' pyspark-shell"
  }
