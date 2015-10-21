@@ -55,6 +55,8 @@
         file: path=/home/jupyter/.jupyter state=directory owner=jupyter group=jupyter recurse=yes
       - name: create jupyter config dir
         file: path=/home/jupyter/notebooks state=directory owner=jupyter group=jupyter recurse=yes
+      - name: copy sample notebooks
+        copy: src=notebooks/ dest=/home/jupyter/notebooks/ owner=jupyter group=jupyter
       - name: copy jupyter config
         copy: src=config/jupyter_notebook_config.py dest=/home/jupyter/.jupyter/jupyter_notebook_config.py owner=jupyter group=jupyter
       - name: create ipython config dir
