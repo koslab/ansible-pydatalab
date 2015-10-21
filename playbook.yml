@@ -63,7 +63,7 @@
       - name: install jupyter
         command: /opt/anaconda/bin/conda install jupyter -y
         args:
-            creates: /opt/anaconda/bin/jupyter
+            creates: /opt/anaconda/bin/jupyter-notebook
 
       - name: install bokeh
         command: /opt/anaconda/bin/conda install bokeh -y
