@@ -71,7 +71,7 @@
             creates: /opt/anaconda/bin/bokeh-server
 
       - name: create runtime user
-        runtime: name=runtime shell=/bin/bash 
+        user: name=runtime shell=/bin/bash 
 
       - name: create jupyter config dir
         file: path=/home/runtime/.jupyter/custom state=directory owner=runtime group=runtime recurse=yes
