@@ -27,3 +27,5 @@ Included packages:
  4. Execute ansible
 
         ansible-playbook -i hosts playbook.yml
+
+ 5. Jupyter should be running at my.pybigdatakit.server.local:8888
