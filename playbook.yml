@@ -1,6 +1,4 @@
-- hosts: edge
-  vars:
-    jupyter_port: 8888
+- hosts: master
   remote_user: root
   tasks:
       # Initialization
