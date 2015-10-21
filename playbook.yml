@@ -10,21 +10,20 @@
         yum: name=supervisor
       - name: install bzip2
         yum: name=bzip2
-#      - name: copy dependencies
-#        copy: src=files/ dest=/root/ owner=root group=root
 
       # Install spark      
+      - name: download spark
+        get_url: url=https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz dest=/root/spark-1.3.1-bin-hadoop2.6.tgz validate_certs=no force=no
       - name: extract spark
-        unarchive: src=https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz dest=/opt/ copy=no
-#       unarchive: src=/root/spark-1.3.1-bin-hadoop2.6.tgz dest=/opt/ copy=no
+        unarchive: src=/root/spark-1.3.1-bin-hadoop2.6.tgz dest=/opt/ copy=no
       - name: move spark location
         command: mv /opt/spark-1.3.1-bin-hadoop2.6 /opt/spark-1.3.1
         args:
             creates: /opt/spark-1.3.1
 
       # Install anaconda
-      - name: copy anaconda installer
-        get_url: url=https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh dest=/root/
+      - name: download anaconda installer
+        get_url: url=https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh dest=/root/Anaconda-2.3.0-Linux-x86_64.sh
       - name: install anaconda
         command: bash /root/Anaconda-2.3.0-Linux-x86_64.sh -f -p /opt/anaconda -b
         args:
@@ -48,7 +47,7 @@
       - name: install bokeh
         command: /opt/anaconda/bin/conda install bokeh -y
         args:
-            creates: /opt/anaconda/bin/bokeh
+            creates: /opt/anaconda/bin/bokeh-server
       - name: create jupyter user
         user: name=jupyter shell=/bin/bash 
       - name: create jupyter config dir
