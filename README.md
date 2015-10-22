@@ -12,20 +12,28 @@ Included packages:
  * Python HDFS (https://pypi.python.org/pypi/hdfs/)
  * Spark 1.3.1 (http://spark.apache.org)
  * java-1.8.0-openjdk (http://openjdk.java.net/)
+ * D3.js (http://d3js.org)
+ * DC.js (https://dc-js.github.io/dc.js/)
+ * NVD3.js (http://nvd3.org)
+ * Dimple.js (http://dimplejs.org)
+ * Crossfilter.js (http://square.github.io/crossfilter/)
 
 ## Installation
 
  1. Setup a server or VM with CentOS7
- 2. Ensure FQDN is configured correctly. Spark requires the system 
+ 2. Ensure FQDN is configured correctly. Spark requires the host system 
     hostname to be resolvable, quickest fix is to ensure the hostname 
-    resolves as 127.0.0.1 by adding an entry in /etc/hosts
- 3. Create an ansible hosts inventory:
+    resolves as 127.0.0.1 by adding an entry in /etc/hosts:
+
+        127.0.0.1 localhost.localdomain localhost pydatalab.server.local pydatalab
+
+ 3. Create an ansible hosts inventory (assuming server hostname is your hostname is :
 
         [master]
-        my.pybigdatakit.server.local
+        pydatalab.server.local
 
  4. Execute ansible
 
         ansible-playbook -i hosts playbook.yml
 
- 5. Jupyter should be running at my.pybigdatakit.server.local:8888
+ 5. Jupyter should be running at pydatalab.server.local:8888
