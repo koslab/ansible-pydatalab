@@ -105,7 +105,7 @@
         copy: src=config/supervisord.ini dest=/etc/supervisord.d/jupyter.ini owner=root group=root
 
       - name: start supervisord on boot
-        service: name=supervisord state=started enabled=yes
+        service: name=supervisord state=restarted enabled=yes
 
       - name: open firewall
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
