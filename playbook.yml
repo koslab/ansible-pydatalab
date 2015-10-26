@@ -2,6 +2,9 @@
   remote_user: root
   tasks:
       # Initialization
+      - name: disable selinux
+        selinux: state=permissive policy=targeted
+
       - name: install Java
         yum: name=java-1.8.0-openjdk
 
@@ -13,6 +16,26 @@
 
       - name: install bzip2
         yum: name=bzip2
+
+      - name: install httpd
+        yum: name=httpd
+
+      - name: configure base environment variables
+        copy: src=config/environment.sh dest=/etc/profile.d/990environment.sh owner=root group=root
+
+      # configure httpd
+      - name: allow apache to access /home/runtime
+        file: path=/home/runtime mode=u=rwx,g=x,o=x
+
+      - name: create /home/runtime/notebooks/htdocs
+        file: path=/home/runtime/notebooks/htdocs state=directory owner=runtime group=runtime recurse=yes
+
+      - name: allow apache to access /home/runtime/notebooks/htdocs
+        file: path=/home/runtime/notebooks/htdocs mode=u=rwx,g=rx,o=rx
+
+      - name: copy configuration
+        copy: src=config/httpd.conf dest=/etc/yum.repos.d/datalab.conf owner=root group=root
+
 
       # Install spark      
       - name: download spark
@@ -43,6 +66,21 @@
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/hdfs/
 
+      - name: install python geojson library
+        command: /opt/anaconda/bin/pip install geojson
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/geojson/
+
+      - name: install python geocoder library
+        command: /opt/anaconda/bin/pip install geocoder
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/geocoder/
+
+      - name: install python geopy library
+        command: /opt/anaconda/bin/pip install geopy
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/geopy/
+
       - name: install python hive access library
         command: /opt/anaconda/bin/pip install pyhive
         args:
@@ -58,6 +96,15 @@
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/nvd3/
 
+      - name: install python pygal visualization library
+        command: /opt/anaconda/bin/pip install pygal
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/pygal
+
+      - name: install python seaborn visualization library
+        command: /opt/anaconda/bin/pip install seaborn
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/seaborn
 
       # Install Jupyter, Bokeh, PySpark
       - name: install jupyter
@@ -85,6 +132,12 @@
       - name: create dropzone for additional python modules
         file: path=/home/runtime/python_modules/ state=directory owner=runtime group=runtime recurse=yes
 
+      - name: create dropzone for distribution-level python modules
+        file: path=/opt/python_modules/ state=directory owner=root group=root recurse=yes
+
+      - name: copy bundled libraries
+        copy: src=libs/ dest=/opt/python_modules/ owner=root group=root
+
       - name: copy sample notebooks
         copy: src=notebooks/ dest=/home/runtime/notebooks/ owner=runtime group=runtime
 
@@ -103,6 +156,8 @@
       - name: create jupyter kernel
         copy: src=config/kernel.json dest=/home/runtime/.local/share/jupyter/kernels/pyspark/kernel.json owner=runtime group=runtime
 
+
+
       # start services on boot
       - name: create jupyter supervisor
         copy: src=config/supervisord.ini dest=/etc/supervisord.d/jupyter.ini owner=root group=root
@@ -110,7 +165,12 @@
       - name: start supervisord on boot
         service: name=supervisord state=restarted enabled=yes
 
-      - name: open firewall
+      - name: start httpd on boot
+        service: name=httpd state=restarted enabled=yes
+
+      - name: open firewall port 8888
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
 
+      - name: open firewall port 80
+        firewalld: port=80/tcp permanent=true state=enabled immediate=yes
 
