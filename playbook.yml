@@ -26,19 +26,7 @@
       - name: configure base environment variables
         copy: src=config/environment.sh dest=/etc/profile.d/990environment.sh owner=root group=root
 
-      - name: create runtime user
-        user: name=runtime shell=/bin/bash 
-
       # configure httpd
-      - name: allow apache to access /home/runtime
-        file: path=/home/runtime mode=u=rwx,g=x,o=x
-
-      - name: create /home/runtime/notebooks/htdocs
-        file: path=/home/runtime/notebooks/htdocs state=directory owner=runtime group=runtime recurse=yes
-
-      - name: allow apache to access /home/runtime/notebooks/htdocs
-        file: path=/home/runtime/notebooks/htdocs mode=u=rwx,g=rx,o=rx
-
       - name: copy configuration
         copy: src=config/httpd.conf dest=/etc/yum.repos.d/datalab.conf owner=root group=root
 
@@ -75,10 +63,14 @@
             creates: /opt/anaconda/lib/python2.7/site-packages/gensim
 
       - name: install scrapy
-        command: /opt/anaconda/bin/conda install scrapy
+        command: /opt/anaconda/bin/conda install scrapy -y
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/scrapy
 
+      - name: install python scrapyd 
+        command: /opt/anaconda/bin/pip install scrapyd
+        args:
+            creates: /opt/anaconda/bin/scrapyd
 
       - name: install python geojson library
         command: /opt/anaconda/bin/pip install geojson
@@ -131,11 +123,48 @@
             creates: /opt/anaconda/lib/python2.7/site-packages/mrjob/
 
 
-      # Install Jupyter, Bokeh, PySpark
-      - name: install jupyter
-        command: /opt/anaconda/bin/conda install jupyter -y
+      # install python3 & jupyterhub
+      - name: install python 3.4
+        yum: name=python34-tools
+
+      - name: install python 3.4 development headers
+        yum: name=python34-devel
+
+      - name: get pip3 script
+        get_url: url=https://bootstrap.pypa.io/get-pip.py dest=/root/get-pip.py validate_certs=no force=no
+
+      - name: get pip3
+        command: /usr/bin/python3.4 /root/get-pip.py
         args:
-            creates: /opt/anaconda/bin/jupyter-notebook
+            creates: /usr/bin/pip3
+
+      - name: install npm
+        yum: name=npm
+
+      - name: install nodejs
+        yum: name=nodejs
+
+      - name: install nodejs configurable-http-proxy
+        command: /usr/bin/npm install -g configurable-http-proxy
+        args:
+            creates: /usr/lib/node_modules/configurable-http-proxy
+
+      - name: install jupyterhub
+        command: /usr/bin/pip3 install jupyterhub
+        args:
+            creates: /usr/bin/jupyterhub
+
+      - name: install jupyter for jupyterhub
+        command: /usr/bin/pip3 install jupyter
+        args:
+            creates: /usr/bin/jupyter-notebook
+
+      - name: install ipyparallel for jupyterhub
+        command: /usr/bin/pip3 install ipyparallel
+        args:
+            creates: /usr/lib/python3.4/site-packages/ipyparallel
+
+      # Install Jupyter, Bokeh, PySpark
 
       - name: install bokeh
         command: /opt/anaconda/bin/conda install bokeh==0.10.0 -y
@@ -143,16 +172,13 @@
             creates: /opt/anaconda/bin/bokeh-server
 
       - name: create jupyter config dir
-        file: path=/home/runtime/.jupyter/custom state=directory owner=runtime group=runtime recurse=yes
+        file: path=/usr/local/share/jupyter/custom state=directory owner=root group=root recurse=yes
 
       - name: create jupyter notebook dir
-        file: path=/home/runtime/notebooks state=directory owner=runtime group=runtime recurse=yes
-
-      - name: create jupyter runtime dir
-        file: path=/home/runtime/run/ state=directory owner=runtime group=runtime recurse=yes
+        file: path=/etc/skel/notebooks state=directory owner=root group=root recurse=yes
 
       - name: create dropzone for additional python modules
-        file: path=/home/runtime/python_modules/ state=directory owner=runtime group=runtime recurse=yes
+        file: path=/etc/skel/python_modules/ state=directory owner=root group=root recurse=yes
 
       - name: create dropzone for distribution-level python modules
         file: path=/opt/python_modules/ state=directory owner=root group=root recurse=yes
@@ -161,22 +187,32 @@
         copy: src=libs/ dest=/opt/python_modules/ owner=root group=root
 
       - name: copy sample notebooks
-        copy: src=notebooks/ dest=/home/runtime/notebooks/ owner=runtime group=runtime
+        copy: src=notebooks/ dest=/etc/skel/notebooks/ owner=root group=root
 
       - name: copy jupyter config
-        copy: src=config/jupyter_notebook_config.py dest=/home/runtime/.jupyter/jupyter_notebook_config.py owner=runtime group=runtime
+        copy: src=config/jupyter_notebook_config.py dest=/usr/local/share/jupyter/jupyter_notebook_config.py owner=root group=root
 
       - name: copy javascript library loader
-        copy: src=config/custom.js dest=/home/runtime/.jupyter/custom/custom.js owner=runtime group=runtime
+        copy: src=config/custom.js dest=/usr/local/share/jupyter/custom/custom.js owner=root group=root
 
       - name: copy css loader
-        copy: src=config/custom.css dest=/home/runtime/.jupyter/custom/custom.css owner=runtime group=runtime
+        copy: src=config/custom.css dest=/usr/local/share/jupyter/custom/custom.css owner=root group=root
 
-      - name: create jupyter shared config dir
-        file: path=/home/runtime/.local/share/jupyter/kernels/pyspark/ state=directory owner=runtime group=runtime recurse=yes
+      - name: create jupyter global kernel dir
+        file: path=/usr/local/share/jupyter/kernels state=directory owner=root group=root recurse=yes
 
-      - name: create jupyter kernel
-        copy: src=config/kernel.json dest=/home/runtime/.local/share/jupyter/kernels/pyspark/kernel.json owner=runtime group=runtime
+      - name: create pyspark kernel dir
+        file: path=/usr/local/share/jupyter/kernels/pyspark state=directory owner=root group=root recurse=yes
+
+      - name: register pyspark kernel
+        copy: src=config/kernel.json dest=/usr/local/share/jupyter/kernels/pyspark/kernel.json owner=root group=root
+
+      - name: install jupyterhub config
+        copy: src=config/jupyterhub_config.py dest=/etc/jupyterhub_config.py owner=root group=root
+
+      # create users
+      - name: create pydatalab user
+        user: name=pydatalab shell=/bin/bash password=$6$rounds=100000$PGsZEWuIC.PBXTmi$BKcG/cTfEZCZOroG7sBsXQaGM0Y.JnGdNzIPpjYUOUWi/a4dSeP3Cu/BAVtkYuOkoOmmsYjT9dQOjd42hTRmv0
 
       # start services on boot
       - name: create jupyter supervisor
@@ -190,6 +226,12 @@
 
       - name: open firewall port 8888
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
+
+      - name: open firewall port 8000
+        firewalld: port=8000/tcp permanent=true state=enabled immediate=yes
+
+      - name: open firewall port 6800
+        firewalld: port=6800/tcp permanent=true state=enabled immediate=yes
 
       - name: open firewall port 80
         firewalld: port=80/tcp permanent=true state=enabled immediate=yes
