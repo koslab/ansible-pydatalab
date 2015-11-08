@@ -1,0 +1,14 @@
+LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so
+
+<Location />
+     ProxyPass        http://localhost:8888/
+     ProxyPassReverse http://localhost:8888/
+     RequestHeader set Origin "http://localhost:8888"
+     ProxyPassReverseCookieDomain localhost {{ hostname }}
+</Location>
+
+<Location ~ "/(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)/?">
+      ProxyPass ws://localhost:8888
+      ProxyPassReverse ws://localhost:8888
+</Location>
+

@@ -11,7 +11,7 @@
  "env": {
   "PYSPARK_PYTHON": "/opt/anaconda/bin/python",
   "SPARK_HOME": "/opt/spark-1.3.1-bin-hadoop2.6/",
-  "PYTHONPATH": "/opt/python_modules/:$HOME/python_modules/:/opt/spark-1.3.1-bin-hadoop2.6/python/:/opt/spark-1.3.1-bin-hadoop2.6/python/lib/py4j-0.8.2.1-src.zip",
+  "PYTHONPATH": "python_modules/:/opt/python_modules/:/opt/spark-1.3.1-bin-hadoop2.6/python/:/opt/spark-1.3.1-bin-hadoop2.6/python/lib/py4j-0.8.2.1-src.zip",
   "PYTHONSTARTUP": "/opt/spark-1.3.1-bin-hadoop2.6/python/pyspark/shell.py",
   "PYSPARK_SUBMIT_ARGS": "--master 'local[*]' pyspark-shell"
  }

@@ -1,15 +1,29 @@
 - hosts: master
   remote_user: root
+  vars:
+      # FQDN of the server, keep localhost if you are only going to use this
+      # locally
+      hostname: localhost
   tasks:
       # Initialization
       - name: disable selinux
         selinux: state=permissive policy=targeted
 
+      - name: check if java installed
+        stat: path=/usr/bin/java
+        register: has_java
+
       - name: install Java
         yum: name=java-1.8.0-openjdk
+        when: has_java.stat.exists == false
 
-      - name: install EPEL
+      - name: install EPEL for CentOS
         yum: name=epel-release
+        when: ansible_distribution == "CentOS" 
+
+      - name: install EPEL for RHEL
+        yum: name=https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm 
+        when: ansible_distribution == "RedHat"
 
       - name: install supervisord
         yum: name=supervisor
@@ -20,7 +34,7 @@
       - name: install httpd
         yum: name=httpd
 
-      - name: install pandoc-pdf for pdf conversion
+      - name: install jupyer pdf conversion dependencies
         yum: name=pandoc-pdf
 
       - name: configure base environment variables
@@ -28,7 +42,7 @@
 
       # configure httpd
       - name: copy configuration
-        copy: src=config/httpd.conf dest=/etc/yum.repos.d/datalab.conf owner=root group=root
+        template: src=config/httpd.conf.j2 dest=/etc/httpd/conf.d/pydatalab.conf owner=root group=root
 
       # Install spark      
       - name: download spark
@@ -58,7 +72,7 @@
             creates: /opt/anaconda/lib/python2.7/site-packages/hdfs/
 
       - name: install gensim libraries
-        command: /opt/anaconda/bin/conda install gensim
+        command: /opt/anaconda/bin/conda install gensim -y
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/gensim
 
@@ -93,7 +107,7 @@
             creates: /opt/anaconda/lib/python2.7/site-packages/pyhive/
 
       - name: install ipython parallel
-        command: /opt/anaconda/bin/conda install ipyparallel
+        command: /opt/anaconda/bin/conda install ipyparallel -y
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/ipyparallel/
 
@@ -116,6 +130,11 @@
         command: /opt/anaconda/bin/pip install textblob
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/textblob/
+
+      - name: install python vaderSentiment library
+        command: /opt/anaconda/bin/pip install vaderSentiment
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/vaderSentiment/
 
       - name: install python mrjob library
         command: /opt/anaconda/bin/pip install mrjob
@@ -177,6 +196,12 @@
       - name: create jupyter notebook dir
         file: path=/etc/skel/notebooks state=directory owner=root group=root recurse=yes
 
+      - name: create user python modules dir
+        file: path=/etc/skel/notebooks/python_modules/ state=directory owner=root group=root recurse=yes
+
+      - name: add readme to modules dir
+        copy: src=config/MODULES_README.txt dest=/etc/skel/notebooks/python_modules/ owner=root group=root
+
       - name: create dropzone for additional python modules
         file: path=/etc/skel/python_modules/ state=directory owner=root group=root recurse=yes
 
@@ -224,14 +249,23 @@
       - name: start httpd on boot
         service: name=httpd state=restarted enabled=yes
 
+      - name: check firewalld status
+        command: /usr/bin/systemctl is-enabled firewalld
+        register: firewalld_enabled
+
       - name: open firewall port 8888
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
+        when: firewalld_enabled.rc == 0
 
       - name: open firewall port 8000
         firewalld: port=8000/tcp permanent=true state=enabled immediate=yes
+        when: firewalld_enabled.rc == 0
 
       - name: open firewall port 6800
         firewalld: port=6800/tcp permanent=true state=enabled immediate=yes
+        when: firewalld_enabled.rc == 0
 
       - name: open firewall port 80
         firewalld: port=80/tcp permanent=true state=enabled immediate=yes
+        when: firewalld_enabled.rc == 0
+
