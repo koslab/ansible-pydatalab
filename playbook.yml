@@ -193,6 +193,9 @@
       - name: create jupyter config dir
         file: path=/usr/local/share/jupyter/custom state=directory owner=root group=root recurse=yes
 
+      - name: create jupyter migrated marker
+        file: path=/usr/local/share/jupyter/migrated state=touch owner=root group=root
+
       - name: create jupyter notebook dir
         file: path=/etc/skel/notebooks state=directory owner=root group=root recurse=yes
 
