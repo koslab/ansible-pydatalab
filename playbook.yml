@@ -226,11 +226,24 @@
       - name: create jupyter global kernel dir
         file: path=/usr/local/share/jupyter/kernels state=directory owner=root group=root recurse=yes
 
-      - name: create pyspark kernel dir
+      - name: create local pyspark kernel dir
         file: path=/usr/local/share/jupyter/kernels/pyspark state=directory owner=root group=root recurse=yes
 
-      - name: register pyspark kernel
-        copy: src=config/kernel.json dest=/usr/local/share/jupyter/kernels/pyspark/kernel.json owner=root group=root
+      - name: register local pyspark kernel
+        copy: src=config/kernels/pyspark-local.json dest=/usr/local/share/jupyter/kernels/pyspark/kernel.json owner=root group=root
+
+      - name: check if server is HDP 2.3.0 with pyspark
+        stat: path=/usr/hdp/2.3.0.0-2557/spark/python/pyspark/shell.py
+        register: has_hdp
+
+
+      - name: create HDP 2.3.0 pyspark dir
+        file: path=/usr/local/share/jupyter/kernels/pyspark-hdp state=directory owner=root group=root recurse=yes
+        when: has_hdp.stat.exists
+
+      - name: register HDP 2.3.0 pyspark kernel
+        copy: src=config/kernels/pyspark-hdp.json dest=/usr/local/share/jupyter/kernels/pyspark-hdp/kernel.json owner=root group=root
+        when: has_hdp.stat.exists
 
       - name: install jupyterhub config
         copy: src=config/jupyterhub_config.py dest=/etc/jupyterhub_config.py owner=root group=root
