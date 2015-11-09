@@ -65,3 +65,10 @@ Included packages:
 This ansible script detects whether it is being installed on Hortonworks Data 
 Platform and will create a Jupyter kernel with the right environment variables
 set and configured to use Spark on HDP.
+
+## Supported platforms
+
+This script have been tested on:
+
+ * CentOS 7.1
+ * Red Hat Enterprise Linux 7.1
