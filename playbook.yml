@@ -235,16 +235,16 @@
       - name: register local pyspark kernel
         copy: src=config/kernels/pyspark-local.json dest=/usr/local/share/jupyter/kernels/pyspark/kernel.json owner=root group=root
 
-      - name: check if server is HDP 2.3.0 with pyspark
-        stat: path=/usr/hdp/2.3.0.0-2557/spark/python/pyspark/shell.py
+      - name: check if server is Hortonworks Data Platform with pyspark
+        stat: path=/usr/hdp/current/spark/python/pyspark/shell.py
         register: has_hdp
 
 
-      - name: create HDP 2.3.0 pyspark dir
+      - name: create HDP pyspark kernel dir
         file: path=/usr/local/share/jupyter/kernels/pyspark-hdp state=directory owner=root group=root recurse=yes
         when: has_hdp.stat.exists
 
-      - name: register HDP 2.3.0 pyspark kernel
+      - name: register HDP pyspark kernel
         copy: src=config/kernels/pyspark-hdp.json dest=/usr/local/share/jupyter/kernels/pyspark-hdp/kernel.json owner=root group=root
         when: has_hdp.stat.exists
 

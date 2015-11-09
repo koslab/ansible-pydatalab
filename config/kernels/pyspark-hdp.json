@@ -1,5 +1,5 @@
 {
- "display_name": "PySpark (Anaconda-2.3 / Python-2.7 / HDP-2.3.0.0)",
+ "display_name": "PySpark (Anaconda-2.3 / Python-2.7 / HDP )",
  "language": "python",
  "argv": [
   "/opt/anaconda/bin/python",
@@ -10,10 +10,10 @@
  ],
  "env": {
   "PYSPARK_PYTHON": "/opt/anaconda/bin/python",
-  "SPARK_HOME": "/usr/hdp/2.3.0.0-2557/spark",
-  "HADOOP_HOME": "/usr/hdp/2.3.0.0-2557/hadoop",
-  "PYTHONPATH": "python_modules/:/opt/python_modules/:/usr/hdp/2.3.0.0-2557/spark/python/:/usr/hdp/2.3.0.0-2557/spark/python/lib/py4j-0.8.2.1-src.zip",
-  "PYTHONSTARTUP": "/usr/hdp/2.3.0.0-2557/spark/python/pyspark/shell.py",
+  "SPARK_HOME": "/usr/hdp/current/spark",
+  "HADOOP_HOME": "/usr/hdp/current/hadoop",
+  "PYTHONPATH": "python_modules/:/opt/python_modules/:/usr/hdp/current/spark/python/:/usr/hdp/current/spark/python/lib/py4j-0.8.2.1-src.zip",
+  "PYTHONSTARTUP": "/usr/hdp/current/spark/python/pyspark/shell.py",
   "PYSPARK_SUBMIT_ARGS": "pyspark-shell"
  }
 }
