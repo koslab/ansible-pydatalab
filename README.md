@@ -57,3 +57,11 @@ Included packages:
         ansible-playbook -i hosts playbook.yml
 
  5. Jupyter should be running at pydatalab.server.local:8888
+
+ 6. Default login for pydatalab user is ``pydatalab:pydatalab``
+
+## Integration with Hortonworks Hadoop
+
+This ansible script detects whether it is being installed on Hortonworks Data 
+Platform and will create a Jupyter kernel with the right environment variables
+set and configured to use Spark on HDP.
