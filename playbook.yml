@@ -199,8 +199,12 @@
 
       # branding hacks
 
-      - name: replace jupyter logo
+      - name: replace jupyterhub logo
         copy: src=patches/pydatalab.png dest=/usr/share/jupyter/hub/static/images/jupyter.png
+
+      - name: replace jupyter logo
+        copy: src=patches/pydatalab.png dest=/usr/lib/python3.4/site-packages/notebook/static/base/images/logo.png
+
 
       # Install additional libraries
       
