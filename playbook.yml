@@ -1,4 +1,4 @@
-- hosts: master
+- hosts: pydatalab
   remote_user: root
   vars:
         # FQDN of the server, keep localhost if you are only going to use this
