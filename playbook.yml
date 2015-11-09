@@ -1,9 +1,14 @@
 - hosts: master
   remote_user: root
   vars:
-      # FQDN of the server, keep localhost if you are only going to use this
-      # locally
-      hostname: localhost
+        # FQDN of the server, keep localhost if you are only going to use this
+        # locally
+        hostname: localhost
+        create_user: true
+        spark_url: https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz
+        spark_version: spark-1.3.1-bin-hadoop2.6
+        anaconda_url: https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh
+        epel_release_url: https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm 
   tasks:
       # Initialization
       - name: disable selinux
@@ -22,7 +27,7 @@
         when: ansible_distribution == "CentOS" 
 
       - name: install EPEL for RHEL
-        yum: name=https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm 
+        yum: name={{ epel_release_url }}
         when: ansible_distribution == "RedHat"
 
       - name: install supervisord
@@ -46,20 +51,20 @@
 
       # Install spark      
       - name: download spark
-        get_url: url=https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz dest=/root/spark-1.3.1-bin-hadoop2.6.tgz validate_certs=no force=no
+        get_url: url={{ spark_url }} dest=/root/{{ spark_url | basename }} validate_certs=no force=no
 
       - name: extract spark
-        unarchive: src=/root/spark-1.3.1-bin-hadoop2.6.tgz dest=/opt/ copy=no creates=/opt/spark-1.3.1-bin-hadoop2.6
+        unarchive: src=/root/{{ spark_url | basename }} dest=/opt/ copy=no creates=/opt/{{ spark_version }}
 
       - name: fix issue with pyspark and numpy > 1.10
-        copy: src=patches/pyspark.mllib.py dest=/opt/spark-1.3.1-bin-hadoop2.6/python/pyspark/mllib/__init__.py 
+        copy: src=patches/pyspark.mllib.py dest=/opt/{{ spark_version }}/python/pyspark/mllib/__init__.py 
 
       # Install anaconda
       - name: download anaconda installer
-        get_url: url=https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh dest=/root/Anaconda-2.3.0-Linux-x86_64.sh
+        get_url: url={{ anaconda_url }} dest=/root/{{ anaconda_url | basename }}
 
       - name: install anaconda
-        command: bash /root/Anaconda-2.3.0-Linux-x86_64.sh -f -p /opt/anaconda -b
+        command: bash /root/{{ anaconda_url | basename }} -f -p /opt/anaconda -b
         args:
             creates: /opt/anaconda/bin/python
 
@@ -70,6 +75,11 @@
         command: /opt/anaconda/bin/pip install hdfs
         args:
             creates: /opt/anaconda/lib/python2.7/site-packages/hdfs/
+
+      - name: install spotify luigi 
+        command: /opt/anaconda/bin/pip install luigi
+        args:
+            creates: /opt/anaconda/lib/python2.7/site-packages/luigi/
 
       - name: install gensim libraries
         command: /opt/anaconda/bin/conda install gensim -y
@@ -254,6 +264,7 @@
       # create users
       - name: create pydatalab user
         user: name=pydatalab shell=/bin/bash password=$6$rounds=100000$PGsZEWuIC.PBXTmi$BKcG/cTfEZCZOroG7sBsXQaGM0Y.JnGdNzIPpjYUOUWi/a4dSeP3Cu/BAVtkYuOkoOmmsYjT9dQOjd42hTRmv0
+        when: create_user
 
       # start services on boot
       - name: create jupyter supervisor
@@ -271,14 +282,6 @@
 
       - name: open firewall port 8888
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes
-        when: firewalld_enabled.rc == 0
-
-      - name: open firewall port 8000
-        firewalld: port=8000/tcp permanent=true state=enabled immediate=yes
-        when: firewalld_enabled.rc == 0
-
-      - name: open firewall port 6800
-        firewalld: port=6800/tcp permanent=true state=enabled immediate=yes
         when: firewalld_enabled.rc == 0
 
       - name: open firewall port 80
