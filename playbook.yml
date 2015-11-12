@@ -124,9 +124,6 @@
       - name: add readme to modules dir
         copy: src=config/MODULES_README.txt dest=/etc/skel/notebooks/python_modules/ owner=root group=root
 
-      - name: create dropzone for additional python modules
-        file: path=/etc/skel/python_modules/ state=directory owner=root group=root recurse=yes
-
       - name: create dropzone for distribution-level python modules
         file: path=/opt/python_modules/ state=directory owner=root group=root recurse=yes
 
@@ -155,7 +152,7 @@
         copy: src=config/kernels/pyspark-local.json dest=/usr/local/share/jupyter/kernels/pyspark/kernel.json owner=root group=root
 
       - name: check if server is Hortonworks Data Platform with pyspark
-        stat: path=/usr/hdp/current/spark/python/pyspark/shell.py
+        stat: path=/usr/hdp/current/spark-client/python/pyspark/shell.py
         register: has_hdp
 
 
@@ -188,6 +185,7 @@
       - name: check firewalld status
         command: /usr/bin/systemctl is-enabled firewalld
         register: firewalld_enabled
+        ignore_errors: true
 
       - name: open firewall port 8888
         firewalld: port=8888/tcp permanent=true state=enabled immediate=yes

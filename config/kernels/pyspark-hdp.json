@@ -10,10 +10,10 @@
  ],
  "env": {
   "PYSPARK_PYTHON": "/opt/anaconda/bin/python",
-  "SPARK_HOME": "/usr/hdp/current/spark",
-  "HADOOP_HOME": "/usr/hdp/current/hadoop",
-  "PYTHONPATH": "python_modules/:/opt/python_modules/:/usr/hdp/current/spark/python/:/usr/hdp/current/spark/python/lib/py4j-0.8.2.1-src.zip",
-  "PYTHONSTARTUP": "/usr/hdp/current/spark/python/pyspark/shell.py",
-  "PYSPARK_SUBMIT_ARGS": "pyspark-shell"
+  "SPARK_HOME": "/usr/hdp/current/spark-client",
+  "HADOOP_HOME": "/usr/hdp/current/hadoop-client",
+  "PYTHONPATH": "python_modules/:/opt/python_modules/:/usr/hdp/current/spark-client/python/:/usr/hdp/current/spark-client/python/lib/py4j-0.8.2.1-src.zip",
+  "PYTHONSTARTUP": "/usr/hdp/current/spark-client/python/pyspark/shell.py",
+  "PYSPARK_SUBMIT_ARGS": "--master yarn-client pyspark-shell"
  }
 }
