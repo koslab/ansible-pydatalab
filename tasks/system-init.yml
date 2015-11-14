@@ -1,0 +1,24 @@
+---
+
+- name: disable selinux
+  selinux: state=permissive policy=targeted
+
+- name: check if java installed
+  stat: path=/usr/bin/java
+  register: has_java
+
+- name: install Java
+  yum: name=java-1.8.0-openjdk
+  when: has_java.stat.exists == false
+
+- name: install EPEL for CentOS
+  yum: name=epel-release
+  when: ansible_distribution == "CentOS"
+
+- name: install EPEL for RHEL
+  yum: name={{ epel_release_url }}
+  when: ansible_distribution == "RedHat"
+
+- name: install system deps
+  yum: name=supervisor,bzip2,git,httpd,vim-enhanced,subversion
+

@@ -5,6 +5,7 @@
         # locally
         hostname: localhost
         create_user: true
+        use_local_files: false
         spark_url: https://www.apache.org/dist/spark/spark-1.3.1/spark-1.3.1-bin-hadoop2.6.tgz
         spark_version: spark-1.3.1-bin-hadoop2.6
         anaconda_url: https://repo.continuum.io/archive/Anaconda-2.3.0-Linux-x86_64.sh
@@ -12,27 +13,7 @@
         epel_release_url: https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm 
   tasks:
       # Initialization
-      - name: disable selinux
-        selinux: state=permissive policy=targeted
-
-      - name: check if java installed
-        stat: path=/usr/bin/java
-        register: has_java
-
-      - name: install Java
-        yum: name=java-1.8.0-openjdk
-        when: has_java.stat.exists == false
-
-      - name: install EPEL for CentOS
-        yum: name=epel-release
-        when: ansible_distribution == "CentOS" 
-
-      - name: install EPEL for RHEL
-        yum: name={{ epel_release_url }}
-        when: ansible_distribution == "RedHat"
-
-      - name: install system deps
-        yum: name=supervisor,bzip2,git,httpd,vim-enhanced,subversion
+      - include: tasks/system-init.yml
 
       - name: install jupyer pdf conversion dependencies
         yum: name=pandoc-pdf
@@ -55,17 +36,7 @@
         copy: src=patches/pyspark.mllib.py dest=/opt/{{ spark_version }}/python/pyspark/mllib/__init__.py 
 
       # Install anaconda
-      - name: download anaconda installer
-        get_url: url={{ anaconda_url }} dest=/root/{{ anaconda_url | basename }}
-
-      - name: install anaconda
-        command: bash /root/{{ anaconda_url | basename }} -f -p /opt/anaconda -b
-        args:
-            creates: /opt/anaconda/bin/python
-
-      - name: register anaconda in path
-        copy: src=config/anaconda-path.sh dest=/etc/profile.d/999anaconda.sh owner=root group=root
-
+      - include: tasks/anaconda.yml
 
       # install python3 & jupyterhub
       - name: install python 3.4
@@ -104,16 +75,14 @@
 
       # Install Jupyter, Bokeh, PySpark
 
-      - name: install bokeh
-        command: /opt/anaconda/bin/conda install bokeh==0.10.0 -y
-        args:
-            creates: /opt/anaconda/bin/bokeh-server
-
       - name: create jupyter config dir
+        file: path=/etc/jupyter/ state=directory owner=root group=root recurse=yes
+
+      - name: create jupyter data dir
         file: path=/usr/local/share/jupyter/custom state=directory owner=root group=root recurse=yes
 
       - name: create jupyter migrated marker
-        file: path=/usr/local/share/jupyter/migrated state=touch owner=root group=root
+        file: path=/etc/jupyter/migrated state=touch owner=root group=root
 
       - name: create jupyter notebook dir
         file: path=/etc/skel/notebooks state=directory owner=root group=root recurse=yes
@@ -134,7 +103,7 @@
         copy: src=notebooks/ dest=/etc/skel/notebooks/ owner=root group=root
 
       - name: copy jupyter config
-        copy: src=config/jupyter_notebook_config.py dest=/usr/local/share/jupyter/jupyter_notebook_config.py owner=root group=root
+        copy: src=config/jupyter_notebook_config.py dest=/etc/jupyter/jupyter_notebook_config.py owner=root group=root
 
       - name: copy javascript library loader
         copy: src=config/custom.js dest=/usr/local/share/jupyter/custom/custom.js owner=root group=root
@@ -203,94 +172,6 @@
       - name: replace jupyter logo
         copy: src=patches/pydatalab.png dest=/usr/lib/python3.4/site-packages/notebook/static/base/images/logo.png
 
-
       # Install additional libraries
       
-      - name: install python hdfs access library
-        command: /opt/anaconda/bin/pip install hdfs
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/hdfs/
-
-      - name: install spotify luigi 
-        command: /opt/anaconda/bin/pip install luigi
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/luigi/
-
-      - name: install gensim libraries
-        command: /opt/anaconda/bin/conda install gensim -y
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/gensim
-
-      - name: install scrapy
-        command: /opt/anaconda/bin/conda install scrapy -y
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/scrapy
-
-      - name: install python scrapyd 
-        command: /opt/anaconda/bin/pip install scrapyd
-        args:
-            creates: /opt/anaconda/bin/scrapyd
-
-      - name: install python geojson library
-        command: /opt/anaconda/bin/pip install geojson
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/geojson/
-
-      - name: install python geocoder library
-        command: /opt/anaconda/bin/pip install geocoder
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/geocoder/
-
-      - name: install python geopy library
-        command: /opt/anaconda/bin/pip install geopy
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/geopy/
-
-      - name: install python hive access library
-        command: /opt/anaconda/bin/pip install pyhive
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/pyhive/
-
-      - name: install ipython parallel
-        command: /opt/anaconda/bin/conda install ipyparallel -y
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/ipyparallel/
-
-      - name: install python-nvd3
-        command: /opt/anaconda/bin/pip install python-nvd3
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/nvd3/
-
-      - name: install python pygal visualization library
-        command: /opt/anaconda/bin/pip install pygal
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/pygal
-
-      - name: install python seaborn visualization library
-        command: /opt/anaconda/bin/pip install seaborn
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/seaborn
-
-      - name: install python textblob library
-        command: /opt/anaconda/bin/pip install textblob
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/textblob/
-
-      - name: install python vaderSentiment library
-        command: /opt/anaconda/bin/pip install vaderSentiment
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/vaderSentiment/
-
-      - name: install python mrjob library
-        command: /opt/anaconda/bin/pip install mrjob
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/mrjob/
-
-      
-      - name: download tensorflow whl
-        get_url: url={{ tensorflow_url }} dest=/root/{{ tensorflow_url | basename }}
-
-      - name: install Google Tensorflow
-        command: /opt/anaconda/bin/pip install /root/{{ tensorflow_url | basename }}
-        args:
-            creates: /opt/anaconda/lib/python2.7/site-packages/tensorflow
+      - include: tasks/anaconda-libs.yml

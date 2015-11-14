@@ -1,0 +1,18 @@
+---
+
+- name: download anaconda installer
+  get_url: url={{ anaconda_url }} dest=/root/{{ anaconda_url | basename }}
+  when: use_local_files == false
+
+- name: copy anaconda installer
+  copy: src=files/{{ anaconda_url | basename }} dest=/root/{{ anaconda_url | basename }}
+  when: use_local_files == true
+
+- name: install anaconda
+  command: bash /root/{{ anaconda_url | basename }} -f -p /opt/anaconda -b
+  args:
+      creates: /opt/anaconda/bin/python
+
+- name: register anaconda in path
+  copy: src=config/anaconda-path.sh dest=/etc/profile.d/999anaconda.sh owner=root group=root
+
